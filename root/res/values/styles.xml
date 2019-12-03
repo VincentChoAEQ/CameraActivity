@@ -1,0 +1,24 @@
+<resources>
+
+    <style name="Button" parent="Widget.AppCompat.Button.Borderless">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="textAllCaps">false</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="Button.Yellow">
+        <item name="android:textColor">@color/button_yellow_text</item>
+        <item name="android:background">@drawable/button_yellow</item>
+    </style>
+
+    <style name="Button.Grey">
+        <item name="android:background">@drawable/button_grey</item>
+    </style>
+
+    <style name="Button.Blue">
+        <item name="android:textColor">@color/button_blue_text</item>
+        <item name="android:background">@drawable/button_blue</item>
+    </style>
+
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="title_take_photo">Take a photo</string>
+    <string name="label_take_photo">Take</string>
+    <string name="label_retake_photo">Retake</string>
+    <string name="label_keep_photo">Keep</string>
+    <string name="label_review_picture">Review picture</string>
+    <string name="label_cancel">Cancel</string>
+</resources>
