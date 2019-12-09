@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit
 
 class ${mainActivityClass} : AppCompatActivity() {
     private val executor = Executors.newSingleThreadExecutor()
+
     companion object {
         private const val FLAGS_FULLSCREEN =
             View.SYSTEM_UI_FLAG_LOW_PROFILE or
@@ -54,9 +55,11 @@ class ${mainActivityClass} : AppCompatActivity() {
         }
 
         fun hasPermissions(context: Context): Boolean {
-            return ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+            return ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
         }
-
     }
 
     //private val storage: WsecuStorage by inject()
@@ -71,7 +74,11 @@ class ${mainActivityClass} : AppCompatActivity() {
         if (hasPermissions(this))
             setupCamera()
         else
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), PERMISSIONS_REQUEST_CODE)
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.CAMERA),
+                PERMISSIONS_REQUEST_CODE
+            )
     }
 
     override fun onRequestPermissionsResult(
@@ -80,7 +87,7 @@ class ${mainActivityClass} : AppCompatActivity() {
         if (requestCode == PERMISSIONS_REQUEST_CODE) {
             if (PackageManager.PERMISSION_GRANTED == grantResults.firstOrNull())
                 setupCamera()
-            else{
+            else {
                 //DismissibleDialog(this, resources.getString(R.string.deposit_not_available),
                 //                    resources.getString(R.string.camera_permission_denied_message)).show()
                 //todo error handling
@@ -111,6 +118,7 @@ class ${mainActivityClass} : AppCompatActivity() {
                 .build()
             imageCaptureUseCase = ImageCapture(imageCaptureConfig)
 
+            // !!! turn on analyzer will cause the emulator performance downgrade a lot.
             // Setup image analysis pipeline that computes average pixel luminance
             //val analyzerConfig = ImageAnalysisConfig.Builder().apply {
                 // In our analysis, we care more about the latest image than
@@ -118,7 +126,6 @@ class ${mainActivityClass} : AppCompatActivity() {
             //    setImageReaderMode(
             //        ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
             //}.build()
-
             // Build the image analysis use case and instantiate our analyzer
             //val analyzerUseCase = ImageAnalysis(analyzerConfig).apply {
             //    setAnalyzer(executor, LuminosityAnalyzer())
@@ -180,38 +187,45 @@ class ${mainActivityClass} : AppCompatActivity() {
     private fun previewViewFinder() {
         cameraPreview.visibility = View.VISIBLE
         imagePreview.visibility = View.GONE
-        setLabels(getString(R.string.title_take_photo), getString(R.string.label_cancel), getString(R.string.label_take_photo))
+        setLabels(
+            getString(R.string.title_take_photo),
+            getString(R.string.label_cancel),
+            getString(R.string.label_take_photo)
+        )
 
         decline.setOnClickListener {
-            //storage.rdcCheckFrontBase64 = null
             finish()
         }
 
         accept.setOnClickListener {
-            imageCaptureUseCase.takePicture(ContextCompat.getMainExecutor(this), object : ImageCapture.OnImageCapturedListener() {
-                override fun onCaptureSuccess(image: ImageProxy, rotationDegrees: Int) {
-                    tempCheckImage = image.toBitmap()
-                    confirmCapturedImage()
-                }
-            })
+            imageCaptureUseCase.takePicture(
+                ContextCompat.getMainExecutor(this), captureToMemoryListener)
         }
+
+//        accept.setOnClickListener {
+//            val file = File(externalMediaDirs.first(),"${System.currentTimeMillis()}.jpg")
+//            imageCaptureUseCase.takePicture(file,
+//                ContextCompat.getMainExecutor(this), captureToFileListener)
+//        }
+
+
     }
 
     private fun confirmCapturedImage() {
         cameraPreview.visibility = View.GONE
         imagePreview.visibility = View.VISIBLE
 
-        setLabels(getString(R.string.label_review_picture), getString(R.string.label_retake_photo), getString(R.string.label_keep_photo))
+        setLabels(
+            getString(R.string.label_review_picture),
+            getString(R.string.label_retake_photo),
+            getString(R.string.label_keep_photo)
+        )
         imagePreview.setImageBitmap(tempCheckImage)
 
         decline.setOnClickListener { previewViewFinder() } // Retake
 
         accept.setOnClickListener {
-//            compositeDisposable.add(Single.fromCallable {
-//                //storage.rdcCheckFrontBase64 = tempCheckImage.toBase64()
-//            }.subscribeOn(Schedulers.computation())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe({ }, {}))
+            //todo dealwith tmpCheckImage
             previewViewFinder()
         }
     }
@@ -264,7 +278,11 @@ class ${mainActivityClass} : AppCompatActivity() {
         return BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size, options)
     }
 
-    private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
+    private fun calculateInSampleSize(
+        options: BitmapFactory.Options,
+        reqWidth: Int,
+        reqHeight: Int
+    ): Int {
         // Raw height and width of image
         val (height: Int, width: Int) = options.run { outHeight to outWidth }
         var inSampleSize = 1
@@ -306,7 +324,8 @@ private class LuminosityAnalyzer : ImageAnalysis.Analyzer {
         val currentTimestamp = System.currentTimeMillis()
         // Calculate the average luma no more often than every second
         if (currentTimestamp - lastAnalyzedTimestamp >=
-            TimeUnit.SECONDS.toMillis(1)) {
+            TimeUnit.SECONDS.toMillis(1)
+        ) {
             // Since format in ImageAnalysis is YUV, image.planes[0]
             // contains the Y (luminance) plane
             val buffer = image.planes[0].buffer
